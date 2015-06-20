@@ -82,7 +82,7 @@ class Irc(XMPPModule):
 		self.bot.on_xmpp_msg(name, string)
 
 	def handleMucPresence(self, presence):
-		self.bot.on_xmpp_presence(name, presence['type'])
+		self.bot.on_xmpp_presence(presence['muc']['nick'], presence['type'])
 
 	def help(self, feature):
 		return '''Irc: Unifies an IRC channel and an XMPP server. All messages sent to either is relayed to the other.
