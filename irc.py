@@ -22,7 +22,17 @@ class IrcClient(pydle.Client):
 	def on_ctcp(self, by, target, what, contents):
 		if what == 'ACTION':
 			self.module.ircRecv(by, "/me " + contents)
+	def on_xmpp_presence(self, name, typ):
+		self.message(self.module.xmpp.config['irc']['channel'], "<xmpp>: {} is {}".format(name, typ))
 
+	def on_join(self, channel, user):
+		self.module.xmpp.sendGroupMsg(self.module.xmpp.config['irc']['muc'], "<irc>: {} has joined".format(user))
+
+	def on_part(self, channel, nick, reason):
+		self.module.xmpp.sendGroupMsg(self.module.xmpp.config['irc']['muc'], "<irc>: {} has parted: {}".format(nick, reason))
+
+	def on_quit(self, channel, nick, reason):
+		self.module.xmpp.sendGroupMsg(self.module.xmpp.config['irc']['muc'], "<irc>: {} has quit".format(nick, reason))
 
 class Irc(XMPPModule):
 
@@ -55,7 +65,6 @@ class Irc(XMPPModule):
 		self.thread = threading.Thread(target=self.bot.handle_forever)
 		self.thread.start()
 
-	# TODO: Relay messages from IRC to XMPP
 	def ircRecv(self, by, msg):
 		self.xmpp.sendGroupMsg(self.xmpp.config['irc']['muc'],"<irc-{}>: {}".format(by,msg))
 
@@ -73,7 +82,7 @@ class Irc(XMPPModule):
 		self.bot.on_xmpp_msg(name, string)
 
 	def handleMucPresence(self, presence):
-		pass
+		self.bot.on_xmpp_presence(name, presence['type'])
 
 	def help(self, feature):
 		return '''Irc: Unifies an IRC channel and an XMPP server. All messages sent to either is relayed to the other.
